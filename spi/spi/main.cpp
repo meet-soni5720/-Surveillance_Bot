@@ -9,9 +9,7 @@
 #include <util/delay.h>
 #include <math.h>
 
-#define F_CPU 8000000UL
-
- 
+#define F_CPU 16000000UL
 
 void SPI_master_init(void)
 {
@@ -45,15 +43,26 @@ char SPI_Read()
 	return(SPDR);
 }
 
+ enum {select, leftStick, rightStick, start, up, right, down, left}; //3rd byte
+ enum {leftFront2, rightFront2, leftFront1, rightFront1, triangle_up, circle_right, cross_down, square_left}; // 4th byte
+ 
+ int isPressed(uint16_t databyte,uint16_t databit)
+ {
+	 return((~(databyte & (1<<databit))) ? 1 : 0);
+ }
 int main(void)
 {
+   
   int data0,data1,data2,data3,data4,data5,a,b,c,d=0;
   int cir_rx,cir_ry,cir_lx,cir_ly;
   int x,y,z;
   
+  
+  
   // do the initialistion of the ports according to the use
   PORTB = 0x00;
   DDRB = 0x0D;
+  DDRC = 0b11111111;
   SPI_master_init();
   while(d!= 0x73)
   {
@@ -132,7 +141,7 @@ int main(void)
 	   PORTB|=(1<<PINB0);
 	   _delay_ms(10);
 	   
-   }
+   } 
       while(d==0x73)
       {
 	      while (1)
@@ -151,18 +160,69 @@ int main(void)
 		      data3 = SPI_write(0x00); //  ry
 		      data4 = SPI_write(0x00); //  lx
 		      data5 = SPI_write(0x00); //  ly
+			  
+			 /* USART_Transmit(data0);
+			  _delay_ms(1000);
+			  USART_Transmit(data1);
+			  _delay_ms(1000);
+			  USART_Transmit(data2);
+			  _delay_ms(1000);
+			  USART_Transmit(data3);
+			  _delay_ms(1000);
+			  USART_Transmit(data4);
+			  _delay_ms(1000);
+			  USART_Transmit(data5);
+			  _delay_ms(1000); */
 
 		      _delay_us(1);
 		      PORTB|=(1<<PINB2);
 		      _delay_us(1);
-		      PORTB|=(1<<PINB0);
+		      PORTB|=(1<<PINB0); 
 			  
-			  cir_rx = data2*sqrt(1 - (0.5*(data3)*(data3)));
+			  
+			  
+			 /* cir_rx = data2*sqrt(1 - (0.5*(data3)*(data3)));
 			  cir_ry = data3*sqrt(1 - (0.5*(data2)*(data2)));
 			  cir_lx = data4*sqrt(1 - (0.5*(data5)*(data5)));
-			  cir_ly = data5*sqrt(1 - (0.5*(data5)*(data5)));
-	      }
-		  }       
+			  cir_ly = data5*sqrt(1 - (0.5*(data5)*(data5)));*/
+			 
+			 if(isPressed(data0,right))
+			 {
+				 PORTC |= (1 << PINC0);
+				 _delay_ms(1000);
+				 PORTC &= ~(1 << PINC0);
+			 }
+			 
+			 else if(isPressed(data0,left))
+			 {
+				 PORTC |= (1 << PINC1);
+				 _delay_ms(1000);
+				 PORTC &= ~(1 << PINC1);
+				 
+			 }
+			 else if(isPressed(data1,triangle_up))
+			 {
+				 PORTC |= (1 << PINC2);
+				_delay_ms(1000);
+				PORTC &= ~(1 << PINC2);
+			 }
+			 else if(isPressed(data1,cross_down))
+			 {
+				 PORTC |= (1 << PINC3);
+				 _delay_ms(1000);
+				 PORTC &= ~(1 << PINC3);
+			 } 
+			 else
+			  PORTC &= ~(1 << PINC0) & ~(1 << PINC1) & ~(1 << PINC2) & ~(1 << PINC3);
+			  
+			/*DDRC = 0xFF;
+			while(1)
+			{
+				PORTC |= (1 << PINC0) | (1 << PINC1) | (1<<PINC2);
+			} */
+			}
+			 }
+			 
+		  }
 
-}
 
