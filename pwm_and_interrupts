@@ -4,7 +4,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-int duty=255;
 int cliflag = 0;
 void forward();
 void backward();
@@ -12,10 +11,25 @@ void right();
 void left();
 void sright();
 void sleft();
-void PWM_init();
+void stop();
+void PWM_init()
+ {
+	 TCCR1B |=(0<<WGM13)|(1<<WGM12)|(1<<CS10);  // fast pwm is activate
+	 TCCR1A|=(1<<COM1A1)|(1<<WGM11)|(1<<COM1B1)|(1<<COM1C1); //COMC1  FOR FAST PWM
+	 DDRB |= (1<<PINB6)|(1<<PINB5);
+ } 
+ 
+ ISR(INT1_vect)
+{
+	PORTC |= (1<<PINC0)|(1<<PINC1);
+	_delay_ms(100);
+	cliflag=1;
+}
+
 int main(void)
 {
-	DDRA=0b00001111;
+	DDRA = 0b00001111;
+	DDRB = 0b11100000;
 	DDRC = 0xFF;
 	DDRD = 0xFF;
 	
@@ -28,7 +42,6 @@ int main(void)
 	PWM_init();
 
 	
-	/* Replace with your application code */
 	while (1)
 	{
 		if (cliflag==0)
@@ -42,64 +55,75 @@ int main(void)
 			cliflag=0;
 		}
 	}
-	/* Replace with your application code */
 	
 	
-}
-void forward()
-{
-	PORTA=0b00000101;
-	OCR1A=(int)(duty); //setting PWM to 100% duty cycle
-	OCR1B=(int)(duty);
-	
-}
-void backward()
-{
-	PORTA=0b00001010;
-	OCR1A=(int)(duty); //setting PWM to 100% duty cycle
-	OCR1B=(int)(duty);
-	
-}
-// OCR1A FOR LEFT AND OCR1B FOR RIGHT
-void left()
-{
-	PORTA=0b00000001;
-	OCR1A=(int)(duty*0.2); //setting PWM to 50% duty cycle
-	OCR1B=(int)(duty*0.8);
 	
 }
 
-void right()
-{
-	PORTA=0b0000100;
-	OCR1A=(int)(duty*0.8); //setting PWM to 50% duty cycle
-	OCR1B=(int)(duty*0.2);
-	
-}
-void sleft()
-{
-	PORTA=0b00001001;
-	OCR1A=(int)(duty*0.5); //setting PWM to 50% duty cycle
-	OCR1B=(int)(duty*0.8);
-	
-}
-void sright()
-{
-	PORTA=0b00000110;
-	OCR1A=(int)(duty*0.8); //setting PWM to 50% duty cycle
-	OCR1B=(int)(duty*0.5);
-	
-}
-void PWM_init()
-{
-	TCCR1B |=(0<<WGM13)|(1<<WGM12)|(1<<CS10);
-	DDRB |= (1<<PINB6)|(1<<PINB5);
-}
+         void forward()
+		  {
+			  PORTA=0b11000011;
+			  OCR1A = 255; //setting PWM to 100% duty cycle
+			  OCR1B = 255;
+			  
+		  }
+	 void backward()
+		  {
+			  PORTA=0b00000000;
+			  OCR1A = 255; //setting PWM to 100% duty cycle
+			  OCR1B= 255;
+			  
+		  }
+		  // OCR1A FOR LEFT AND OCR1B FOR RIGHT
+		  
+	 void left()
+		  {
+			  PORTA=0b10000001;
+			  OCR1A=0; //setting PWM to 50% duty cycle
+			  OCR1B=127;
+			  
+		  }
 
-ISR(INT1_vect)
-{
-	PORTC |= (1<<PINC0)|(1<<PINC1);
-	_delay_ms(100);
-	cliflag=1;
-}
+         void right()
+		  {
+			  PORTA=0b01000010;
+			  OCR1A = 127; //setting PWM to 50% duty cycle
+			  OCR1B = 0;
+			  
+		  }
+	 void sleft()
+		  {
+			  PORTA=0b10000001;
+			  OCR1A = 200; //setting PWM to 50% duty cycle
+			  OCR1B = 127;
+			  
+		  }
+         void sright()
+		  {
+			  PORTA=0b01000010;
+			  OCR1A=127; //setting PWM to 50% duty cycle
+			  OCR1B=200;
+		  }  
+		 
+         void revright()
+		  {
+			  PORTA = 0b00000000;
+			  OCR1A = 127;
+			  
+			  
+			  OCR1B = 200;
+		  }
+         void revleft()
+		  {
+			  PORTA = 0x00;
+			  OCR1A = 200;
+			  OCR1B = 127;
+		  }
+         void stop()
+		 {
+			 PORTA = 0x00;
+			 OCR1A = 0;
+			 OCR1B = 0;
+		 }
+
 
